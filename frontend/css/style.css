@@ -1,0 +1,303 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Color Palette */
+    --color-primary: #0C447C;       /* Deep blue: Header, primary buttons, links */
+    --color-success: #1D9E75;       /* Emerald: Success, optimized complexity */
+    --color-warning: #D85A30;       /* Rust: Warning, bad complexity, errors */
+    --color-accent: #7F77DD;        /* Purple-blue: Badges, highlights, focus */
+    --color-text: #2C2C2A;          /* Near black: Body text, text inputs */
+    --color-text-muted: #646462;    /* Slate gray for secondary details */
+    --color-bg: #F1EFE8;            /* Warm cream/gray: Page background */
+    --color-card-bg: #FFFFFF;       /* Pure white: Card background */
+    
+    /* Layout & Spacing */
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Global resets */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    line-height: 1.5;
+}
+
+/* Auth Card layout */
+.auth-container {
+    background-color: var(--color-card-bg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 12px 32px rgba(12, 68, 124, 0.05), 0 2px 8px rgba(44, 44, 42, 0.02);
+    width: 100%;
+    max-width: 440px;
+    padding: 2.5rem;
+    border: 1px solid rgba(12, 68, 124, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative background accent blob for visual appeal */
+.auth-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-brand {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-brand svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+}
+
+.auth-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
+}
+
+.auth-subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+/* Forms and fields styling */
+.form-group {
+    margin-bottom: 1.25rem;
+    position: relative;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--color-text);
+    background-color: var(--color-card-bg);
+    border: 1.5px solid #E2DFD8;
+    border-radius: var(--border-radius-md);
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.form-input-password {
+    padding-right: 2.75rem;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    color: var(--color-text-muted);
+    transition: var(--transition-smooth);
+    border-radius: 50%;
+}
+
+.toggle-password:hover {
+    color: var(--color-primary);
+    background-color: rgba(12, 68, 124, 0.08);
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+/* Input states styling */
+.form-input:hover {
+    border-color: #C5C2BA;
+}
+
+.form-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 4px rgba(127, 119, 221, 0.15);
+}
+
+/* Validation classes */
+.form-input.is-valid {
+    border-color: var(--color-success);
+}
+
+.form-input.is-valid:focus {
+    box-shadow: 0 0 0 4px rgba(29, 158, 117, 0.15);
+}
+
+.form-input.is-invalid {
+    border-color: var(--color-warning);
+}
+
+.form-input.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(216, 90, 48, 0.15);
+}
+
+/* Helper & Feedback Text */
+.form-feedback {
+    font-size: 0.75rem;
+    margin-top: 0.35rem;
+    font-weight: 500;
+    display: none;
+}
+
+.form-feedback.is-valid {
+    color: var(--color-success);
+    display: block;
+}
+
+.form-feedback.is-invalid {
+    color: var(--color-warning);
+    display: block;
+}
+
+/* Buttons */
+.btn-primary {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0.85rem;
+    background-color: var(--color-primary);
+    color: var(--color-card-bg);
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    margin-top: 0.5rem;
+}
+
+.btn-primary:hover {
+    background-color: #083460;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(12, 68, 124, 0.2);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.btn-primary:disabled {
+    background-color: #A3B5C9;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Footer / Switch link */
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.auth-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+    color: var(--color-accent);
+}
+
+/* Tooltip/Password criteria (uses accent color #7F77DD for badges) */
+.password-requirements {
+    margin-top: 0.5rem;
+    background-color: #F8F7FC;
+    border: 1px solid rgba(127, 119, 221, 0.1);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.requirements-title {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.requirement-item.met {
+    color: var(--color-success);
+}
+
+.requirement-item.unmet {
+    color: var(--color-text-muted);
+}
+
+.badge-pattern {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    background-color: #7F77DD;
+    color: #FFFFFF;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
