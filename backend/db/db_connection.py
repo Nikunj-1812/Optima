@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from config import DATABASE_URL
 
+connect_arg = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_arg = {"check_same_thread": False} 
 
