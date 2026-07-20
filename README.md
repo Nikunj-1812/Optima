@@ -79,3 +79,10 @@ debug_sessions
  
 learn_progress
   id, user_id, topic, status
+
+
+Host: localhost
+Port: 5432
+User: postgres
+Password: postgres
+Database name: optima

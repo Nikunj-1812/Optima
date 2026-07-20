@@ -7,6 +7,7 @@ from psycopg2 import pool
 
 _pool = None
 
+connect_arg = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_arg = {"check_same_thread": False} 
 
