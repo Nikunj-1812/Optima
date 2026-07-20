@@ -57,7 +57,7 @@ project-root/
 Database Schema (PostgreSQL)
 users
   id, name, email, password_hash, created_at
- 
+  
 submissions
   id, user_id, language, code,
   time_complexity, space_complexity,
