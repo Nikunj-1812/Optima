@@ -27,25 +27,4 @@ class Submission:
             fetch=True,
         )
     
-    @staticmethod
-    def find_by_id(submission_id):
-        return run_query(
-            "SELECT * FROM submissions WHERE id = %s", (submission_id,), fetchone=True
-        )
-
-    @staticmethod
-    def weak_areas(user_id, limit=5):
-        """Powers the 'Weak areas' tags — patterns most associated with
-        submissions that were NOT optimal (e.g. O(n^2) or worse)."""
-        return run_query(
-            """SELECT p.pattern_name, COUNT(*) AS occurrences
-               FROM patterns p
-               JOIN submissions s ON s.id = p.submission_id
-               WHERE s.user_id = %s
-                 AND (s.time_complexity ILIKE %s OR s.time_complexity ILIKE %s)
-               GROUP BY p.pattern_name
-               ORDER BY occurrences DESC
-               LIMIT %s""",
-            (user_id, "%^2%", "%^3%", limit),
-            fetch=True,
-        )
+    
