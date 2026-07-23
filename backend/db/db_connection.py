@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from config import DATABASE_URL, Config
+from config import Config
+DATABASE_URL = Config.DATABASE_URL
 import psycopg2
 import psycopg2.extras
 from psycopg2 import pool
