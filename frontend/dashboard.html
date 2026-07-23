@@ -3,9 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+    <title>Dashboard - Optima</title>
+    <!-- Favicon -->
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- Fixed Left Sidebar -->
+    <aside class="sidebar">
+        <a href="dashboard.html" class="sidebar-brand">
+            <span>Optima</span>
+        </a>
+
+        <nav style="flex-grow: 1;">
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="dashboard.html" class="sidebar-link active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+                            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+                            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+                            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="ide.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        <span>IDE / Workspace</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="abtest.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M16 3h5v5"></path>
+                            <path d="M4 20L21 3"></path>
+                            <path d="M21 16v5h-5"></path>
+                            <path d="M15 15l6 6"></path>
+                            <path d="M4 4l5 5"></path>
+                        </svg>
+                        <span>A-B Tests</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="learn.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        <span>Learn</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="logout-btn" class="logout-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Log Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+        
+        <!-- Top Navigation / Brand Bar -->
+        <header class="top-bar">
+            <div class="welcome-section">
+                <h1>Welcome back, <span id="user-display-name">Developer</span></h1>
+                <p>Track your algorithms complexity, optimize runtime, and tackle patterns.</p>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar" id="user-avatar">D</div>
+                <div class="user-info">
+                    <span class="user-name" id="user-username">Developer</span>
+                    <span class="user-role">Developer</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; color: var(--color-text-muted);">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </header>
+
+        <!-- Stats Metric Grid -->
+        <section class="stats-grid">
+            <!-- Metric 1: Total Submissions -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-title">Total Submissions</span>
+                    <span class="stat-value" id="stat-submissions">0</span>
+                    <span class="stat-desc" id="stat-submissions-delta">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                        <span>+0 this week</span>
+                    </span>
+                </div>
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Metric 2: Average Complexity -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-title">Avg Complexity</span>
+                    <span class="stat-value" id="stat-complexity">O(N)</span>
+                    <span class="stat-desc" id="stat-complexity-delta">
+                        <span>Optimal Range</span>
+                    </span>
+                </div>
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Metric 3: Patterns Learned -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-title">Patterns Learned</span>
+                    <span class="stat-value" id="stat-patterns">0</span>
+                    <span class="stat-desc neutral" id="stat-patterns-delta">
+                        <span>Out of 12 cataloged</span>
+                    </span>
+                </div>
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Metric 4: Coding Streak -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-title">Coding Streak</span>
+                    <span class="stat-value" id="stat-streak">0 Days</span>
+                    <span class="stat-desc" id="stat-streak-delta">
+                        <span>Consistent progress</span>
+                    </span>
+                </div>
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Split Layout -->
+        <div class="dashboard-body-grid">
+            
+            <!-- Left Side: Submissions Table -->
+            <section class="content-card submissions-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Recent Submissions
+                    </h2>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="submissions-table">
+                        <thead>
+                            <tr>
+                                <th>Problem</th>
+                                <th>Language</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Submitted At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissions-tbody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Right Side: Weak Areas & Feed -->
+            <section class="content-card insights-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        Weak Areas
+                    </h2>
+                </div>
+
+                <div class="weak-areas-container">
+                    <p class="weak-areas-intro">
+                        Optima has identified areas where your code complexity often deviates from optimal bounds. Click a topic to open the Learn module.
+                    </p>
+                    
+                    <div class="weak-areas-tags" id="weak-areas-tags-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <div class="feed-divider"></div>
+
+                    <h3 class="feed-title">Pattern Recognizer Feed</h3>
+                    <div class="feed-list" id="pattern-feed-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Javascript Handlers -->
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>

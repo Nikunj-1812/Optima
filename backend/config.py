@@ -35,3 +35,9 @@ class Config:
 
     # CORS
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+
+
+# Global module-level aliases for JWT auth service
+SECRET_KEY = Config.JWT_SECRET_KEY
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = Config.JWT_ACCESS_TOKEN_EXPIRES // 60
