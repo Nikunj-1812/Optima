@@ -20,10 +20,10 @@ class Pattern:
             fetch=True,
         )
 
+    
     @staticmethod
     def learned_by_user(user_id):
-        """Distinct patterns a user has encountered — used for the
-        'Patterns learned' dashboard stat."""
+        """Distinct patterns a user has encountered — used for the            'Patterns learned' dashboard stat."""
         return run_query(
             """SELECT DISTINCT p.pattern_name
                FROM patterns p

@@ -21,7 +21,7 @@ def analyze_complexity():
     result = claude_service.analyze_complexity(code, language)
     patterns = claude_service.detect_patterns(code, language)
 
-    submission = Submission.create(
+    submission = submission.create(
         user_id=user_id,
         language=language,
         code=code,
