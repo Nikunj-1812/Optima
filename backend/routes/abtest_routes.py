@@ -1,30 +1,37 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
 from models.ab_test import ABTest
+from models.user import User
+from routes.auth_routes import get_current_user
 from services import claude_service
 
-abtest_bp = Blueprint("abtest",__name__, url_prefix="/api/abte")
+router = APIRouter(prefix="/api/abtest", tags=["abtest"])
 
-@abtest_bp.post("")
-@jwt_required()
-def create_ab_test():
-    user_id = get_jwt_identity()
-    data = request.get_json(force=True)
-    code_a = data.get("code_a")
-    code_b = data.get("code_b")
-    language = data.get("language")
 
-    if not code_a or not code_b or not language:
-        return jsonify({"error": "code_a, code_b and language are required"}), 400 #bad request
+class ABTestRequest(BaseModel):
+    code_a: str
+    code_b: str
+    language: str
 
-    result = claude_service.compare_ab(code_a, code_b, language)
-    ab_test = ABTest.create(user_id, code_a, code_b, result)
 
-    return jsonify(ab_test), 201 #created
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_ab_test(
+    payload: ABTestRequest,
+    current_user: User = Depends(get_current_user),
+):
+    if not payload.code_a or not payload.code_b or not payload.language:
+        raise HTTPException(
+            status_code=400,
+            detail="code_a, code_b and language are required",
+        )
 
-@abtest_bp.get("")
-@jwt_required()
-def list_ab_tests():
-    user_id = get_jwt_identity()
-    tests = ABTest.recent_for_user(user_id)
-    return jsonify({"ab_tests": tests}), 200 #ok
+    result = claude_service.compare_ab(payload.code_a, payload.code_b, payload.language)
+    ab_test = ABTest.create(current_user.id, payload.code_a, payload.code_b, result)
+    return ab_test
+
+
+@router.get("")
+def list_ab_tests(current_user: User = Depends(get_current_user)):
+    tests = ABTest.recent_for_user(current_user.id)
+    return {"ab_tests": tests}

@@ -15,6 +15,14 @@ class Submission:
         )
     
     @staticmethod
+    def find_by_id(submission_id):
+        return run_query(
+            "SELECT * FROM submissions WHERE id = %s",
+            (submission_id,),
+            fetchone=True,
+        )
+
+    @staticmethod
     def recent_for_user(user_id, limit=10):
         """Powers the 'Recent submissions' table on the dashboard."""
         return run_query(
@@ -26,5 +34,14 @@ class Submission:
             (user_id, limit),
             fetch=True,
         )
-    
-    
+
+    @staticmethod
+    def weak_areas(user_id):
+        return run_query(
+            """SELECT time_complexity, COUNT(*) as count
+               FROM submissions
+               WHERE user_id = %s
+               GROUP BY time_complexity""",
+            (user_id,),
+            fetch=True,
+        )

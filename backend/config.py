@@ -19,6 +19,11 @@ class Config:
         "DATABASE_URL",
         "postgresql://postgres:postgres@localhost:5432/optima"
     )
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = int(os.getenv("DB_PORT", 5432))
+    DB_NAME = os.getenv("DB_NAME", "optima")
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
 
     # Claude
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")

@@ -4,7 +4,7 @@ class Question:
     @staticmethod
     def create(submission_id, question_text):
         return run_query(
-            """INSERT INTO questions (submission_id, 
+            """INSERT INTO questions (submission_id, question_text)
                VALUES (%s, %s) RETURNING *""",
             (submission_id, question_text),
             fetchone=True,

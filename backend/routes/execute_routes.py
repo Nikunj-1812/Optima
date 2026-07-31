@@ -1,24 +1,31 @@
-from flask import Blueprint, request,jsonify
-from flask_jwt_extended import jwt_required
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from typing import Optional
+
+from models.user import User
+from routes.auth_routes import get_current_user
 from services import executor_service
 
-execute_bp = Blueprint("execute", __name__, url_prefix="/api/execute")
+router = APIRouter(prefix="/api/execute", tags=["execute"])
 
-@execute_bp.post("")
-@jwt_required()
-def run_code():
-    data = request.get_json(force=True)
-    language = data.get("language")
-    code = data.get("code")
-    stdin = data.get("stdin", "")
 
-    if not language or not code:
-        return jsonify({"error": "language and code are required"}), 400 #bad request
+class ExecuteRequest(BaseModel):
+    language: str
+    code: str
+    stdin: Optional[str] = ""
+
+
+@router.post("")
+def run_code(
+    payload: ExecuteRequest,
+    current_user: User = Depends(get_current_user),
+):
+    if not payload.language or not payload.code:
+        raise HTTPException(status_code=400, detail="language and code are required")
 
     try:
-        result = executor_service.run_code(language, code, stdin)
+        result = executor_service.run_code(payload.language, payload.code, payload.stdin or "")
     except Exception as e:
-        return jsonify({"error": f"Execution failed: {str(e)}"}), 502 #bad gateway
+        raise HTTPException(status_code=502, detail=f"Execution failed: {str(e)}")
 
-    return jsonify(result), 200 #ok
-    
+    return result

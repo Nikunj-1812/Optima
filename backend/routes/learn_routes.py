@@ -1,8 +1,11 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models.learn_progress import LearnProgress
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
-learn_bp = Blueprint("learn", __name__, url_prefix="/api/learn")
+from models.learn_progress import LearnProgress
+from models.user import User
+from routes.auth_routes import get_current_user
+
+router = APIRouter(prefix="/api/learn", tags=["learn"])
 
 TOPICS = [
     "Arrays & Hashing", "Two Pointers", "Sliding Window", "Stack",
@@ -11,29 +14,32 @@ TOPICS = [
     "Intervals", "Math & Geometry", "Bit Manipulation",
 ]
 
-@learn_bp.get("/topics")
-@jwt_required()
-def list_topics():
-    user_id = get_jwt_identity()
-    progress = {p["topic"]: p["status"] for p in LearnProgress.for_user(user_id)}
-    return jsonify({
+
+class UpdateProgressRequest(BaseModel):
+    topic: str
+    status: str
+
+
+@router.get("/topics")
+def list_topics(current_user: User = Depends(get_current_user)):
+    user_progress = LearnProgress.for_user(current_user.id) or []
+    progress_map = {p["topic"]: p["status"] for p in user_progress if isinstance(p, dict) and "topic" in p}
+    return {
         "topics": [
-            {"topic": t, "status": progress.get(t, "not_started")} for t in TOPICS
+            {"topic": t, "status": progress_map.get(t, "not_started")} for t in TOPICS
         ]
-    }), 200 #
+    }
 
-@learn_bp.post("/progress")
-@jwt_required()
-def update_progress():
-    user_id = get_jwt_identity()
-    data = request.get_json(force=True)
-    topic = data.get("topic")
-    status = data.get("status")
 
-    if topic not in TOPICS:
-        return jsonify({"error": "Unknown topic"}), 400 #bad request
-    if status not in ("not_started", "in_progress", "mastered"):
-        return jsonify({"error": "Invalid status"}), 400 #bad request
+@router.post("/progress")
+def update_progress(
+    payload: UpdateProgressRequest,
+    current_user: User = Depends(get_current_user),
+):
+    if payload.topic not in TOPICS:
+        raise HTTPException(status_code=400, detail="Unknown topic")
+    if payload.status not in ("not_started", "in_progress", "mastered"):
+        raise HTTPException(status_code=400, detail="Invalid status")
 
-    updated = LearnProgress.upsert(user_id, topic, status)
-    return jsonify(updated), 200 #ok
+    updated = LearnProgress.upsert(current_user.id, payload.topic, payload.status)
+    return updated

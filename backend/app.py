@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.db_connection import Base, engine
-from routes import auth_routes
+from routes import (
+    auth_routes,
+    analyze_routes,
+    abtest_routes,
+    debug_routes,
+    execute_routes,
+    learn_routes,
+    pattern_routes,
+    questions_routes,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,6 +26,13 @@ app.add_middleware(
 )
 
 app.include_router(auth_routes.router)
+app.include_router(analyze_routes.router)
+app.include_router(abtest_routes.router)
+app.include_router(debug_routes.router)
+app.include_router(execute_routes.router)
+app.include_router(learn_routes.router)
+app.include_router(pattern_routes.router)
+app.include_router(questions_routes.router)
 
 
 @app.get("/")

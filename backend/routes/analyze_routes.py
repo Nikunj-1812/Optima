@@ -1,65 +1,79 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models.submission import Pattern
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from typing import Optional
+
+from models.submission import Submission
 from models.pattern import Pattern
+from models.user import User
+from routes.auth_routes import get_current_user
 from services import claude_service
+from db.db_connection import run_query
 
-analyze_bp = Blueprint("analyze", __name__, url_prefix="/api/analyze")
+router = APIRouter(prefix="/api/analyze", tags=["analyze"])
 
-@analyze_bp.post("/complexity")
-@jwt_required()
-def analyze_complexity():
-    user_id = get_jwt_identity()
-    data = request.get_json(force=True)
-    code = data.get("code")
-    language = data.get("language")
-    problem_title = data.get("problem_title")
 
-    if not code or not language:
-        return jsonify({"error": "code and language are required"}), 400 # bad request
+class ComplexityRequest(BaseModel):
+    code: str
+    language: str
+    problem_title: Optional[str] = None
 
-    result = claude_service.analyze_complexity(code, language)
-    patterns = claude_service.detect_patterns(code, language)
 
-    submission = submission.create(
-        user_id=user_id,
-        language=language,
-        code=code,
-        problem_title=problem_title,
-        time_complexity=result["time_comlexity"],
-        space_complexity=result["space_complexity"],
+class OptimizeRequest(BaseModel):
+    code: str
+    language: str
+    submission_id: Optional[int] = None
+
+
+@router.post("/complexity", status_code=status.HTTP_201_CREATED)
+def analyze_complexity(
+    payload: ComplexityRequest,
+    current_user: User = Depends(get_current_user),
+):
+    if not payload.code or not payload.language:
+        raise HTTPException(status_code=400, detail="code and language are required")
+
+    result = claude_service.analyze_complexity(payload.code, payload.language)
+    patterns = claude_service.detect_patterns(payload.code, payload.language)
+
+    time_comp = result.get("time_complexity") or result.get("time_comlexity", "")
+    space_comp = result.get("space_complexity", "")
+
+    sub = Submission.create(
+        user_id=current_user.id,
+        language=payload.language,
+        code=payload.code,
+        problem_title=payload.problem_title,
+        time_complexity=time_comp,
+        space_complexity=space_comp,
     )
 
-    for p in patterns:
-        Pattern.create(submission["id"], p["name"], p.get("confidence", 0.5))
+    sub_id = sub["id"] if isinstance(sub, dict) and "id" in sub else getattr(sub, "id", None)
 
-    return jsonify({
-        "submission": submission,
+    for p in patterns:
+        Pattern.create(sub_id, p["name"], p.get("confidence", 0.5))
+
+    return {
+        "submission": sub,
         "analysis": result,
         "patterns": patterns,
-    }), 201 #created
+    }
 
 
-@analyze_bp.post("/optimize")
-@jwt_required()
-def optimize():
-    data = request.get_json(force=True)
-    code = data.get("code")
-    language = data.get("language")
-    submission_id = data.get("submission_id")
+@router.post("/optimize")
+def optimize(
+    payload: OptimizeRequest,
+    current_user: User = Depends(get_current_user),
+):
+    if not payload.code or not payload.language:
+        raise HTTPException(status_code=400, detail="code and language are required")
 
-    if not code or not language:
-            return jsonify({"error": "code and language are required"}), 400 #bad request
+    result = claude_service.optimize_code(payload.code, payload.language)
 
-    result = claude_service.optimize_code(code, language)
+    if payload.submission_id:
+        run_query(
+            "UPDATE submissions SET optimized_code = %s WHERE id = %s",
+            (result.get("optimized_code", ""), payload.submission_id),
+            commit=True,
+        )
 
-    if submission_id:
-         from db.db_connection import run_query
-         run_query(
-              """UPDATE submissions SET optimized_code = %s WHERE id = %s""",
-              (result["optimized_code"], submission_id),
-              commit=True,
-         )
-
-    return jsonify(result), 200 #created
-    
+    return result
