@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE / Workspace - Optima</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/ide.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- Fixed Left Sidebar (Reused from Dashboard) -->
+    <aside class="sidebar">
+        <a href="dashboard.html" class="sidebar-brand">
+            <span>Optima</span>
+        </a>
+
+        <nav style="flex-grow: 1;">
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="dashboard.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="ide.html" class="sidebar-link active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span>IDE / Workspace</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="abtest.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+                        <span>A-B Tests</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="learn.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        <span>Learn</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="patterns.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                        <span>Patterns</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="questions.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span>Interview Prep</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="debug.html" class="sidebar-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                        <span>Debug Assistant</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="logout-btn" class="logout-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Log Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        
+        <!-- Top Bar Navigation (Reused from Dashboard) -->
+        <header class="top-bar">
+            <div class="welcome-section">
+                <h1>Algorithm IDE</h1>
+                <p>Submit your custom solutions to inspect time and space complexity instantly.</p>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar" id="user-avatar">D</div>
+                <div class="user-info">
+                    <span class="user-name" id="user-username">Developer</span>
+                    <span class="user-role">Developer</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Split Grid Workspace -->
+        <div class="workspace-grid">
+            
+            <!-- Left Panel: Editor & Inputs -->
+            <section class="workspace-card editor-card">
+                <div class="editor-header">
+                    <!-- Dropdown Picker Group -->
+                    <div class="picker-group">
+                        <div class="selector-field">
+                            <label for="problem-selector">Problem</label>
+                            <select id="problem-selector" class="ide-select">
+                                <option value="Only IDE">Only IDE</option>
+                                <option value="Two Sum">Two Sum</option>
+                                <option value="Valid Parentheses">Valid Parentheses</option>
+                                <option value="Merge Intervals">Merge Intervals</option>
+                                <option value="Fibonacci Number">Fibonacci Number</option>
+                                <option value="Binary Search">Binary Search</option>
+                                <option value="Custom Problem">Custom Problem</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Custom Problem Input Name (Hidden by default) -->
+                        <div class="selector-field" id="custom-problem-field" style="display: none;">
+                            <label for="custom-problem-title">Problem Title</label>
+                            <input type="text" id="custom-problem-title" class="ide-input" placeholder="e.g. Reverse String">
+                        </div>
+
+                        <div class="selector-field">
+                            <label for="language-selector">Language</label>
+                            <select id="language-selector" class="ide-select">
+                                <option value="Python">Python</option>
+                                <option value="JavaScript">JavaScript</option>
+                                <option value="C++">C++</option>
+                                <option value="Java">Java</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Editor Area -->
+                <div class="code-editor-container">
+                    <div class="line-numbers" id="line-numbers-sidebar">
+                        <span>1</span>
+                    </div>
+                    <textarea id="code-textarea" spellcheck="false" placeholder="// Enter your code here"></textarea>
+                </div>
+
+                <!-- Bottom Action Controls -->
+                <div class="editor-actions">
+                    <button type="button" id="reset-code-btn" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                        </svg>
+                        Reset Code
+                    </button>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" id="run-analysis-btn" class="btn-primary-alt">
+                            Run
+                        </button>
+                        <button type="button" id="submit-code-btn" class="btn-primary">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Results & Feedback Console -->
+            <section class="workspace-card console-card">
+                <div class="console-header">
+                    <h2 class="console-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                        </svg>
+                        Analysis Feedback
+                    </h2>
+                    <span class="status-indicator-idle" id="analysis-status">Ready</span>
+                </div>
+
+                <!-- Analysis Summary Pane -->
+                <div class="console-body" id="console-body">
+                    
+                    <!-- Prompt Message displayed when idle -->
+                    <div class="console-idle-view" id="idle-view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="idle-icon">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        <h3>Complexity Checker</h3>
+                        <p>Write your algorithm in the editor panel and click <strong>Run Analysis</strong> to run space & time calculations, identify patterns, and check bottlenecks.</p>
+                    </div>
+
+                    <!-- Populated Results panel (hidden by default) -->
+                    <div class="analysis-results-view" id="results-view" style="display: none;">
+                        
+                        <!-- Complexity Badges -->
+                        <div class="result-badges-row">
+                            <div class="metric-result-card">
+                                <span class="metric-label">Estimated Time Complexity</span>
+                                <div class="badge-wrapper">
+                                    <span id="time-complexity-badge" class="complexity-badge">O(1)</span>
+                                </div>
+                            </div>
+                            <div class="metric-result-card">
+                                <span class="metric-label">Estimated Space Complexity</span>
+                                <div class="badge-wrapper">
+                                    <span id="space-complexity-badge" class="complexity-badge">O(1)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pattern Recognition Card -->
+                        <div class="insights-group">
+                            <h3 class="group-title">Pattern Recognition</h3>
+                            <div class="insight-item-box" id="pattern-recognition-box">
+                                <div class="insight-icon" id="pattern-status-icon">
+                                    <!-- Dynamic Icon -->
+                                </div>
+                                <div class="insight-content">
+                                    <h4 id="pattern-headline">No complex pattern detected</h4>
+                                    <p id="pattern-description">Optimize recursion or loops to view architectural patterns.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations / Code Optimization refactoring suggestions -->
+                        <div class="insights-group" style="margin-top: 1.5rem;">
+                            <h3 class="group-title">Refactoring Recommendations</h3>
+                            <div class="recommendations-container" id="recommendations-container">
+                                <!-- Populated dynamically by script -->
+                            </div>
+                        </div>
+
+                        <!-- Execution Terminal & Logs -->
+                        <div class="insights-group" style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                <h3 class="group-title" style="margin-bottom: 0;">Execution Output & Errors</h3>
+                                <span id="execution-status-badge" class="execution-badge success">Success</span>
+                            </div>
+                            <div class="terminal-box" id="terminal-box">
+                                <div class="terminal-section" id="stdout-section">
+                                    <span class="terminal-label">Standard Output (stdout)</span>
+                                    <pre class="terminal-code" id="terminal-stdout">No output produced.</pre>
+                                </div>
+                                <div class="terminal-section" id="stderr-section" style="display: none;">
+                                    <span class="terminal-label error">Error Logs & Stacktrace (stderr)</span>
+                                    <pre class="terminal-code error" id="terminal-stderr"></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Script imports -->
+    <script src="js/api.js"></script>
+    <script src="js/ide.js"></script>
+</body>
+</html>

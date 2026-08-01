@@ -1,11 +1,27 @@
+/**
+ * auth.js — Authentication Logic for Optima (Login & Signup pages)
+ *
+ * Uses AuthAPI from api.js (must be loaded before this script).
+ * Backend endpoints:
+ *   POST /api/auth/signup  — Body: { username, password, confirm_password }
+ *   POST /api/auth/login   — Body: { username, password }
+ *   Response: { access_token, token_type, user: { id, username } }
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Password visibility toggle logic (shared between signup and login)
+    // ─── If user is already authenticated, send to dashboard ───────────────
+    if (getToken() && getStoredUser()) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    // ─── Password visibility toggle (shared between signup and login) ───────
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', () => {
             const input = button.closest('.input-wrapper').querySelector('input');
             const eyeShow = button.querySelector('.eye-show');
             const eyeHide = button.querySelector('.eye-hide');
-            
+
             if (input.type === 'password') {
                 input.type = 'text';
                 eyeShow.style.display = 'none';
@@ -18,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Helper: Update validation styles and feedback message
+    // ─── Helper: Update validation styles and feedback message ──────────────
     function updateFieldState(input, feedbackEl, isValid, message) {
         if (!input || !feedbackEl) return;
         if (input.value === '') {
@@ -43,19 +59,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==========================================
+    // ─── Show a general error banner below the form ──────────────────────────
+    function showFormError(form, message) {
+        let banner = form.querySelector('.form-error-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.className = 'form-error-banner';
+            banner.style.cssText = [
+                'color: var(--color-error, #f87171)',
+                'background: rgba(248,113,113,0.08)',
+                'border: 1px solid rgba(248,113,113,0.25)',
+                'border-radius: 8px',
+                'padding: 0.65rem 1rem',
+                'font-size: 0.875rem',
+                'margin-top: 0.5rem',
+                'text-align: center',
+            ].join(';');
+            // Insert before the submit button
+            const submitBtn = form.querySelector('button[type="submit"]');
+            form.insertBefore(banner, submitBtn);
+        }
+        banner.textContent = message;
+        banner.style.display = 'block';
+    }
+
+    function hideFormError(form) {
+        const banner = form.querySelector('.form-error-banner');
+        if (banner) banner.style.display = 'none';
+    }
+
+    // ─── Persist session from backend response ────────────────────────────────
+    function persistSession(data) {
+        if (data && data.access_token) {
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+        }
+    }
+
+    // ─── Show success state ───────────────────────────────────────────────────
+    function showSuccessState(username, subtitle) {
+        const header = document.querySelector('.auth-header');
+        if (header) {
+            header.innerHTML = `
+                <div class="auth-brand" style="color: var(--color-success)">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <span>Optima</span>
+                </div>
+                <h1 class="auth-title" style="color: var(--color-success)">${escapeHtml(username)}</h1>
+                <p class="auth-subtitle">${escapeHtml(subtitle)}</p>
+            `;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // SIGNUP FORM LOGIC
-    // ==========================================
+    // ═══════════════════════════════════════════════════════════════════════════
     const signupForm = document.getElementById('signup-form');
     if (signupForm) {
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirm-password');
-        
+
         const usernameFeedback = document.getElementById('username-feedback');
         const passwordFeedback = document.getElementById('password-feedback');
         const confirmPasswordFeedback = document.getElementById('confirm-password-feedback');
-        
+
         const submitBtn = document.getElementById('submit-btn');
 
         let isUsernameValid = false;
@@ -91,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasSpecial = /[@$!%*?&#^()_+\-=]/.test(value);
 
             isPasswordValid = hasLength && hasLowercase && hasUppercase && hasDigit && hasSpecial;
-            
+
             if (value === '') {
                 updateFieldState(passwordInput, passwordFeedback, false, '');
             } else {
@@ -106,9 +176,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 updateFieldState(
-                    passwordInput, 
-                    passwordFeedback, 
-                    isPasswordValid, 
+                    passwordInput,
+                    passwordFeedback,
+                    isPasswordValid,
                     isPasswordValid ? 'Password meets complexity criteria.' : errorMsg
                 );
             }
@@ -151,83 +221,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (isUsernameValid && isPasswordValid && isConfirmPasswordValid) {
-                submitBtn.setAttribute('disabled', 'true');
-                submitBtn.textContent = 'Creating account...';
+            if (!isUsernameValid || !isPasswordValid || !isConfirmPasswordValid) return;
 
-                try {
-                    const response = await fetch('http://localhost:5000/api/auth/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: usernameInput.value,
-                            password: passwordInput.value,
-                            confirm_password: confirmPasswordInput.value
-                        })
-                    });
+            hideFormError(signupForm);
+            submitBtn.setAttribute('disabled', 'true');
+            submitBtn.textContent = 'Creating account...';
 
-                    const data = await response.json();
+            // POST /api/auth/signup
+            const { ok, data } = await AuthAPI.signup(
+                usernameInput.value.trim(),
+                passwordInput.value,
+                confirmPasswordInput.value
+            );
 
-                    if (response.ok) {
-                        if (data && data.access_token) {
-                            localStorage.setItem('token', data.access_token);
-                            localStorage.setItem('user', JSON.stringify(data.user));
-                        }
+            if (ok && data) {
+                persistSession(data);
+                // Clear any stale submission cache from previous sessions
+                SubmissionCache.clear();
 
-                        const header = document.querySelector('.auth-header');
-                        header.innerHTML = `
-                            <div class="auth-brand" style="color: var(--color-success)">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                </svg>
-                                <span>Optima</span>
-                            </div>
-                            <h1 class="auth-title" style="color: var(--color-success)">Account Created!</h1>
-                            <p class="auth-subtitle">Welcome aboard, ${usernameInput.value}. Redirecting to dashboard...</p>
-                        `;
-                        signupForm.style.display = 'none';
+                showSuccessState('Account Created!', `Welcome aboard, ${usernameInput.value.trim()}. Redirecting to dashboard...`);
+                signupForm.style.display = 'none';
 
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 2000);
-                    } else {
-                        let errorMsg = 'Signup failed. Try again.';
-                        if (data && data.detail) {
-                            if (Array.isArray(data.detail)) {
-                                errorMsg = data.detail.map(err => err.msg).join(', ');
-                            } else {
-                                errorMsg = data.detail;
-                            }
-                        }
-                        updateFieldState(usernameInput, usernameFeedback, false, errorMsg);
-                        submitBtn.removeAttribute('disabled');
-                        submitBtn.textContent = 'Sign up';
-                    }
-                } catch (err) {
-                    alert('Server error. Please try again later.');
-                    submitBtn.removeAttribute('disabled');
-                    submitBtn.textContent = 'Sign up';
-                }
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1800);
+            } else {
+                const msg = extractErrorMessage(data, 'Signup failed. Please try again.');
+                showFormError(signupForm, msg);
+                submitBtn.removeAttribute('disabled');
+                submitBtn.textContent = 'Sign up';
             }
         });
     }
 
-    // ==========================================
+    // ═══════════════════════════════════════════════════════════════════════════
     // LOGIN FORM LOGIC
-    // ==========================================
+    // ═══════════════════════════════════════════════════════════════════════════
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
-        
+
         const usernameFeedback = document.getElementById('username-feedback');
         const passwordFeedback = document.getElementById('password-feedback');
-        
+
         const submitBtn = document.getElementById('submit-btn');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const username = usernameInput.value.trim();
             const password = passwordInput.value;
 
@@ -237,59 +279,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            hideFormError(loginForm);
             submitBtn.setAttribute('disabled', 'true');
             submitBtn.textContent = 'Logging in...';
 
-            try {
-                const response = await fetch('http://localhost:5000/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
+            // POST /api/auth/login
+            const { ok, data, status } = await AuthAPI.login(username, password);
 
-                const data = await response.json();
+            if (ok && data) {
+                persistSession(data);
+                // Clear stale cache from any previous session
+                SubmissionCache.clear();
 
-                if (response.ok) {
-                    if (data && data.access_token) {
-                        localStorage.setItem('token', data.access_token);
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                    }
+                showSuccessState('Login Successful!', `Welcome back, ${username}. Redirecting...`);
+                loginForm.style.display = 'none';
 
-                    const header = document.querySelector('.auth-header');
-                    header.innerHTML = `
-                        <div class="auth-brand" style="color: var(--color-success)">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                            <span>Optima</span>
-                        </div>
-                        <h1 class="auth-title" style="color: var(--color-success)">Login Successful!</h1>
-                        <p class="auth-subtitle">Welcome back, ${username}. Redirecting...</p>
-                    `;
-                    loginForm.style.display = 'none';
-
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                let msg;
+                if (status === 0) {
+                    msg = 'Cannot connect to server. Make sure the backend is running on port 8000.';
                 } else {
-                    let errorMsg = 'Invalid username or password.';
-                    if (data && data.detail) {
-                        if (Array.isArray(data.detail)) {
-                            errorMsg = data.detail.map(err => err.msg).join(', ');
-                        } else {
-                            errorMsg = data.detail;
-                        }
-                    }
-                    updateFieldState(usernameInput, usernameFeedback, false, errorMsg);
-                    updateFieldState(passwordInput, passwordFeedback, false, '');
-                    submitBtn.removeAttribute('disabled');
-                    submitBtn.textContent = 'Log in';
+                    msg = extractErrorMessage(data, 'Invalid username or password.');
                 }
-            } catch (err) {
-                alert('Server error. Please try again later.');
+                showFormError(loginForm, msg);
+                // Clear individual field error state — show banner instead
+                updateFieldState(usernameInput, usernameFeedback, false, '');
+                updateFieldState(passwordInput, passwordFeedback, false, '');
                 submitBtn.removeAttribute('disabled');
                 submitBtn.textContent = 'Log in';
             }
         });
+    }
+
+    // ─── Shared helper ─────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 });

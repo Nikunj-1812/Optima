@@ -86,3 +86,9 @@ Port: 5432
 User: postgres
 Password: postgres
 Database name: optima
+
+
+python -m http.server 5500
+Dashboard: http://localhost:5500/dashboard.html
+IDE Workspace: http://localhost:5500/ide.html
+

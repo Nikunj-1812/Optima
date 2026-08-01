@@ -1,18 +1,25 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.exc import OperationalError
 from config import Config
+
 DATABASE_URL = Config.DATABASE_URL
-import psycopg2
-import psycopg2.extras
-from psycopg2 import pool
-
-_pool = None
-
 connect_arg = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_arg = {"check_same_thread": False} 
 
-engine = create_engine(DATABASE_URL , connect_args=connect_arg)
+if DATABASE_URL.startswith("sqlite"):
+    connect_arg = {"check_same_thread": False}
+
+try:
+    engine = create_engine(DATABASE_URL, connect_args=connect_arg)
+    with engine.connect() as conn:
+        pass
+    print(f"[DB] Connected to Database: {DATABASE_URL}")
+except Exception as e:
+    print(f"[DB Warning] Primary database ({DATABASE_URL}) unavailable. Falling back to SQLite: sqlite:///./optima.db")
+    DATABASE_URL = "sqlite:///./optima.db"
+    connect_arg = {"check_same_thread": False}
+    engine = create_engine(DATABASE_URL, connect_args=connect_arg)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
