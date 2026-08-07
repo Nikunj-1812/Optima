@@ -1,75 +1,88 @@
-from sqlalchemy import create_engine
+from contextlib import contextmanager
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.exc import OperationalError
 from config import Config
 
 DATABASE_URL = Config.DATABASE_URL
-connect_arg = {}
+connect_args = {}
 
 if DATABASE_URL.startswith("sqlite"):
-    connect_arg = {"check_same_thread": False}
+    connect_args = {"check_same_thread": False}
 
 try:
-    engine = create_engine(DATABASE_URL, connect_args=connect_arg)
+    engine = create_engine(DATABASE_URL, connect_args=connect_args)
     with engine.connect() as conn:
         pass
     print(f"[DB] Connected to Database: {DATABASE_URL}")
 except Exception as e:
     print(f"[DB Warning] Primary database ({DATABASE_URL}) unavailable. Falling back to SQLite: sqlite:///./optima.db")
     DATABASE_URL = "sqlite:///./optima.db"
-    connect_arg = {"check_same_thread": False}
-    engine = create_engine(DATABASE_URL, connect_args=connect_arg)
+    connect_args = {"check_same_thread": False}
+    engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 def get_db():
+    """FastAPI Dependency for route handlers."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-def init_pool(minconn=1, maxconn=10):
-    global _pool
-    if _pool is None:
-        _pool = psycopg2.pool.ThreadedConnectionPool(
-            minconn,
-            maxconn,
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            dbname=Config.DB_NAME,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-        )
-    return _pool
 
-def get_connection():
-    if _pool is None:
-        init_pool()
-    return _pool.getconn()
-
-
-def put_connection(conn):
-    if _pool is not None:
-        _pool.putconn(conn)
-
-def run_query(query, params=None, fetch=False, fetchone=False, commit=False):
-    """Small helper: run a query and optionally fetch/commit results."""
-    conn = get_connection()
+@contextmanager
+def db_session():
+    """Context manager for model methods and standalone operations."""
+    session = SessionLocal()
     try:
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(query, params or ())
-            result = None
-            if fetchone:
-                result = cur.fetchone()
-            elif fetch:
-                result = cur.fetchall()
-            if commit:
-                conn.commit()
-            return result
+        yield session
+        session.commit()
     except Exception:
-        conn.rollback()
+        session.rollback()
         raise
     finally:
-        put_connection(conn)
+        session.close()
+
+
+def run_query(query: str, params=None, fetch: bool = False, fetchone: bool = False, commit: bool = False):
+    """
+    Database-agnostic query executor using SQLAlchemy text constructs.
+    Supports dictionary results and works across SQLite and PostgreSQL.
+    """
+    with db_session() as session:
+        # Convert %s placeholders to :param format if raw postgres string passed
+        clean_query = query
+        param_dict = {}
+        if params:
+            if isinstance(params, (list, tuple)):
+                # If positional, convert %s to named parameters :p0, :p1, ...
+                parts = clean_query.split("%s")
+                if len(parts) - 1 == len(params):
+                    new_q = []
+                    for idx, part in enumerate(parts[:-1]):
+                        p_name = f"p{idx}"
+                        param_dict[p_name] = params[idx]
+                        new_q.append(f"{part}:{p_name}")
+                    new_q.append(parts[-1])
+                    clean_query = "".join(new_q)
+                else:
+                    clean_query = query
+            elif isinstance(params, dict):
+                param_dict = params
+
+        stmt = text(clean_query)
+        result = session.execute(stmt, param_dict)
+
+        if fetchone:
+            row = result.mappings().first()
+            return dict(row) if row else None
+        elif fetch:
+            rows = result.mappings().all()
+            return [dict(r) for r in rows]
+
+        if commit:
+            session.commit()
+        return None

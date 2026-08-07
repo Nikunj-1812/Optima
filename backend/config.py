@@ -5,7 +5,7 @@ load_dotenv()
 
 
 class Config:
-    # Flask
+    # App Secret
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
 
     # JWT
@@ -14,7 +14,7 @@ class Config:
         os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 86400)
     )  # 24 hours
 
-    # PostgreSQL
+    # Database
     DATABASE_URL = os.getenv(
         "DATABASE_URL",
         "postgresql://postgres:postgres@localhost:5432/optima"
@@ -25,9 +25,9 @@ class Config:
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
 
-    # Claude
+    # Claude AI
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-    CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
+    CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
 
     # Code Execution
     EXECUTOR_PROVIDER = os.getenv("EXECUTOR_PROVIDER", "piston")
@@ -45,4 +45,4 @@ class Config:
 # Global module-level aliases for JWT auth service
 SECRET_KEY = Config.JWT_SECRET_KEY
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = Config.JWT_ACCESS_TOKEN_EXPIRES // 60
+ACCESS_TOKEN_EXPIRE_MINUTES = Config.JWT_ACCESS_TOKEN_EXPIRES // 60

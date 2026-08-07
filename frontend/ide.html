@@ -154,7 +154,10 @@
                         </svg>
                         Reset Code
                     </button>
-                    <div style="display: flex; gap: 1rem;">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button type="button" id="optimize-code-btn" class="btn-secondary" title="Get AI Optimized Code">
+                            ⚡ Optimize
+                        </button>
                         <button type="button" id="run-analysis-btn" class="btn-primary-alt">
                             Run
                         </button>
@@ -229,6 +232,31 @@
                             <h3 class="group-title">Refactoring Recommendations</h3>
                             <div class="recommendations-container" id="recommendations-container">
                                 <!-- Populated dynamically by script -->
+                            </div>
+                        </div>
+
+                        <!-- AI Optimized Solution Panel (shown when optimized) -->
+                        <div class="insights-group" id="optimization-group" style="margin-top: 1.5rem; display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h3 class="group-title" style="margin-bottom: 0;">⚡ AI Optimized Solution</h3>
+                                <span id="optimization-badge" class="complexity-badge good">Optimized</span>
+                            </div>
+                            <div class="insight-item-box success">
+                                <div class="insight-content">
+                                    <h4 id="optimization-rationale-title">Optimization Rationale</h4>
+                                    <p id="optimization-rationale-text" style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.25rem;"></p>
+                                </div>
+                            </div>
+                            <div class="terminal-box" style="margin-top: 0.75rem;">
+                                <div class="terminal-section">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <span class="terminal-label">Optimized Code</span>
+                                        <button type="button" id="apply-optimized-code-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                                            Apply to Editor
+                                        </button>
+                                    </div>
+                                    <pre class="terminal-code" id="optimized-code-block" style="color: var(--color-success);"></pre>
+                                </div>
                             </div>
                         </div>
 

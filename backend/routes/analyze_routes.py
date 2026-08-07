@@ -7,7 +7,7 @@ from models.pattern import Pattern
 from models.user import User
 from routes.auth_routes import get_current_user
 from services import claude_service
-from db.db_connection import run_query
+from db.db_connection import db_session
 
 router = APIRouter(prefix="/api/analyze", tags=["analyze"])
 
@@ -70,10 +70,9 @@ def optimize(
     result = claude_service.optimize_code(payload.code, payload.language)
 
     if payload.submission_id:
-        run_query(
-            "UPDATE submissions SET optimized_code = %s WHERE id = %s",
-            (result.get("optimized_code", ""), payload.submission_id),
-            commit=True,
-        )
+        with db_session() as session:
+            sub = session.query(Submission).filter(Submission.id == int(payload.submission_id)).first()
+            if sub:
+                sub.optimized_code = result.get("optimized_code", "")
 
     return result

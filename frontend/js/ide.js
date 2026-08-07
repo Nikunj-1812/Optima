@@ -7,9 +7,6 @@
  *   POST /api/analyze/complexity  — Claude AI complexity + patterns analysis
  *   POST /api/analyze/optimize    — Claude AI code optimization
  *   POST /api/execute             — Run code via Piston (through backend, requires auth)
- *
- * The static local heuristic parser has been replaced by real AI analysis.
- * Code execution now routes through the backend (which wraps Piston API).
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineNumbersSidebar  = document.getElementById('line-numbers-sidebar');
 
     const resetCodeBtn        = document.getElementById('reset-code-btn');
+    const optimizeCodeBtn     = document.getElementById('optimize-code-btn');
     const runAnalysisBtn      = document.getElementById('run-analysis-btn');
     const submitCodeBtn       = document.getElementById('submit-code-btn');
 
@@ -52,8 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const patternDescription      = document.getElementById('pattern-description');
     const recommendationsContainer = document.getElementById('recommendations-container');
 
+    const optimizationGroup       = document.getElementById('optimization-group');
+    const optimizationBadge       = document.getElementById('optimization-badge');
+    const optimizationRationale   = document.getElementById('optimization-rationale-text');
+    const optimizedCodeBlock      = document.getElementById('optimized-code-block');
+    const applyOptimizedBtn       = document.getElementById('apply-optimized-code-btn');
+
     // Track last submission_id from backend so optimize / debug can reference it
     let lastSubmissionId = null;
+    let currentOptimizedCode = '';
 
     // ─── 3. CODE TEMPLATE DICTIONARY ─────────────────────────────────────────
     const codeTemplates = {
@@ -122,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
             codeTextarea.value = '// Enter your code here';
         }
         updateLineNumbers();
-        // Reset analysis state when template changes
         resetAnalysisUI();
         lastSubmissionId = null;
     }
@@ -132,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         analysisStatus.className = 'status-indicator-idle';
         idleView.style.display = 'flex';
         resultsView.style.display = 'none';
+        if (optimizationGroup) optimizationGroup.style.display = 'none';
     }
 
     problemSelector.addEventListener('change', () => {
@@ -165,11 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ─── 6. RENDER ANALYSIS RESULTS ───────────────────────────────────────────
 
-    /**
-     * Renders Claude AI analysis results into the results panel.
-     * @param {object} analysisData - from POST /api/analyze/complexity response
-     *   { submission, analysis: { time_complexity, space_complexity, explanation }, patterns }
-     */
     function renderAnalysis(analysisData) {
         const analysis = analysisData.analysis || {};
         const patterns = analysisData.patterns || [];
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recs.push({
                 type: 'warning',
                 bold: 'High Time Complexity Detected.',
-                text: `Your solution runs in ${timeC}. Consider algorithmic improvements such as memoization, hash maps, or a two-pointer approach.`,
+                text: `Your solution runs in ${timeC}. Click the ⚡ Optimize button above for an algorithmic refactor.`,
             });
         } else if (timeCl === 'warning') {
             recs.push({
@@ -290,12 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ─── 7. CODE EXECUTION VIA BACKEND ────────────────────────────────────────
 
-    /**
-     * Runs code via POST /api/execute (backend wraps Piston, requires auth).
-     * @param {string} code
-     * @param {string} langName - frontend language name (e.g. "Python", "C++")
-     * @param {string} stdin
-     */
     async function runCodeExecution(code, langName, stdin = '') {
         const executionBadge = document.getElementById('execution-status-badge');
         const stdoutElem     = document.getElementById('terminal-stdout');
@@ -309,8 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stdoutElem.textContent = 'Executing code on backend...';
         stderrSection.style.display = 'none';
 
-        // POST /api/execute  (ExecuteAPI maps language names for us)
-        const { ok, data, status, error } = await ExecuteAPI.run(langName, code, stdin);
+        const { ok, data, status } = await ExecuteAPI.run(langName, code, stdin);
 
         if (ok && data) {
             const stdout   = (data.stdout || '').trim();
@@ -330,15 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 stderrSection.style.display = 'none';
             }
 
-            // If we got a runtime error and have a submission_id, offer debug help
             if (lastSubmissionId && (stderr || (exitCode !== null && exitCode !== 0))) {
                 const errorMsg = stderr || `Exit code ${exitCode}`;
                 offerDebugHelp(lastSubmissionId, errorMsg, stderrSection);
             }
-        } else if (status === 401) {
-            // authFetch already redirected; nothing more to do
-        } else {
-            // Network or server error — show a helpful message
+        } else if (status !== 401) {
             executionBadge.textContent = 'Error';
             executionBadge.className = 'execution-badge error';
             if (status === 0) {
@@ -355,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─── 8. DEBUG HELP OFFER ──────────────────────────────────────────────────
 
     function offerDebugHelp(submissionId, errorMsg, stderrSection) {
-        // Avoid adding multiple debug buttons
         if (stderrSection.querySelector('.debug-help-btn')) return;
 
         const debugBtn = document.createElement('button');
@@ -373,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const suggestion = data.suggestion || 'No suggestion available.';
                 const errorType = data.error_type || 'Unknown';
 
-                // Show in the recommendations container
                 const rec = document.createElement('div');
                 rec.className = 'rec-card warning-border';
                 rec.style.marginTop = '0.75rem';
@@ -409,14 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
             problemName = customProblemTitle.value.trim() || 'Custom Algorithm';
         }
 
-        // Set running state
         analysisStatus.textContent = 'Analyzing...';
         analysisStatus.className = 'status-indicator-running';
         runAnalysisBtn.setAttribute('disabled', 'true');
         submitCodeBtn.setAttribute('disabled', 'true');
+        if (optimizeCodeBtn) optimizeCodeBtn.setAttribute('disabled', 'true');
         runAnalysisBtn.textContent = 'Analyzing...';
 
-        // Show results view with loading placeholders
         idleView.style.display = 'none';
         resultsView.style.display = 'flex';
         timeComplexityBadge.textContent = '...';
@@ -424,22 +410,20 @@ document.addEventListener('DOMContentLoaded', () => {
         patternHeadline.textContent = 'Consulting AI...';
         patternDescription.textContent = 'Analyzing your code for patterns and complexity.';
         recommendationsContainer.innerHTML = '';
+        if (optimizationGroup) optimizationGroup.style.display = 'none';
 
-        // Map frontend language to backend expected format
         const backendLangMap = {
             'Python': 'python', 'JavaScript': 'javascript',
             'C++': 'cpp', 'Java': 'java',
         };
         const backendLang = backendLangMap[langName] || langName.toLowerCase();
 
-        // POST /api/analyze/complexity
         const { ok, data, status } = await AnalyzeAPI.complexity(codeText, backendLang, problemName !== 'Only IDE' ? problemName : null);
 
         if (ok && data) {
             lastSubmissionId = data.submission?.id || null;
             renderAnalysis(data);
 
-            // Cache submission for dashboard display
             if (data.submission) {
                 SubmissionCache.prepend({
                     ...data.submission,
@@ -458,15 +442,76 @@ document.addEventListener('DOMContentLoaded', () => {
             spaceComplexityBadge.textContent = 'N/A';
         }
 
-        // Run code execution in parallel (even if analysis fails)
         await runCodeExecution(codeText, langName);
 
         runAnalysisBtn.removeAttribute('disabled');
         submitCodeBtn.removeAttribute('disabled');
+        if (optimizeCodeBtn) optimizeCodeBtn.removeAttribute('disabled');
         runAnalysisBtn.textContent = 'Run';
     });
 
-    // ─── 10. SUBMIT BUTTON HANDLER ────────────────────────────────────────────
+    // ─── 10. OPTIMIZE CODE HANDLER ────────────────────────────────────────────
+
+    if (optimizeCodeBtn) {
+        optimizeCodeBtn.addEventListener('click', async () => {
+            const codeText = codeTextarea.value.trim();
+            if (!codeText || codeText === '// Enter your code here') {
+                alert('Please write some code in the editor before optimizing.');
+                return;
+            }
+
+            const langName = languageSelector.value;
+            const backendLangMap = {
+                'Python': 'python', 'JavaScript': 'javascript',
+                'C++': 'cpp', 'Java': 'java',
+            };
+            const backendLang = backendLangMap[langName] || langName.toLowerCase();
+
+            optimizeCodeBtn.disabled = true;
+            optimizeCodeBtn.textContent = '⚡ Optimizing...';
+
+            idleView.style.display = 'none';
+            resultsView.style.display = 'flex';
+
+            const { ok, data, status } = await AnalyzeAPI.optimize(codeText, backendLang, lastSubmissionId);
+
+            optimizeCodeBtn.disabled = false;
+            optimizeCodeBtn.textContent = '⚡ Optimize';
+
+            if (ok && data) {
+                currentOptimizedCode = data.optimized_code || '';
+                if (optimizationGroup) {
+                    optimizationGroup.style.display = 'block';
+                    if (optimizationRationale) {
+                        optimizationRationale.textContent = data.rationale || 'Code optimized for lower algorithmic complexity.';
+                    }
+                    if (optimizedCodeBlock) {
+                        optimizedCodeBlock.textContent = currentOptimizedCode || '// No code returned.';
+                    }
+                    if (optimizationBadge) {
+                        const newTime = data.new_time_complexity || 'Optimal';
+                        optimizationBadge.textContent = newTime;
+                    }
+                }
+            } else if (status !== 401) {
+                const msg = extractErrorMessage(data, 'Optimization request failed.');
+                alert(`Optimization failed: ${msg}`);
+            }
+        });
+    }
+
+    if (applyOptimizedBtn) {
+        applyOptimizedBtn.addEventListener('click', () => {
+            if (currentOptimizedCode) {
+                codeTextarea.value = currentOptimizedCode;
+                updateLineNumbers();
+                applyOptimizedBtn.textContent = 'Applied ✓';
+                setTimeout(() => { applyOptimizedBtn.textContent = 'Apply to Editor'; }, 2000);
+            }
+        });
+    }
+
+    // ─── 11. SUBMIT BUTTON HANDLER ────────────────────────────────────────────
 
     submitCodeBtn.addEventListener('click', async () => {
         const codeText = codeTextarea.value.trim();
@@ -491,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
         submitCodeBtn.textContent = 'Submitting...';
         runAnalysisBtn.setAttribute('disabled', 'true');
 
-        // POST /api/analyze/complexity  — saves submission in database
         const { ok, data, status } = await AnalyzeAPI.complexity(
             codeText,
             backendLang,
@@ -501,7 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ok && data) {
             lastSubmissionId = data.submission?.id || null;
 
-            // Cache real submission for dashboard
             if (data.submission) {
                 SubmissionCache.prepend({
                     ...data.submission,
@@ -510,7 +553,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Show results from real analysis
             renderAnalysis(data);
 
             submitCodeBtn.textContent = 'Submitted ✓';
@@ -528,10 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ─── 11. INITIALIZE PAGE ──────────────────────────────────────────────────
+    // ─── 12. INITIALIZE PAGE ──────────────────────────────────────────────────
     loadTemplate();
 
-    // ─── 12. LOGOUT ───────────────────────────────────────────────────────────
+    // ─── 13. LOGOUT ───────────────────────────────────────────────────────────
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
@@ -541,7 +583,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ─── Helper: escapeHtml ───────────────────────────────────────────────────
     function escapeHtml(str) {
         if (typeof str !== 'string') return String(str || '');
         return str
